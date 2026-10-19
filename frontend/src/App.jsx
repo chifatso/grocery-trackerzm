@@ -11,6 +11,8 @@ import MainLayout from "./MainLayout";
 import SpendingHistoryPage from "./pages/SpendingHistoryPage";
 import BudgetSpendingPage from "./pages/BudgetSpendingPage";
 import GroceryListsPage from "./pages/GroceryListsPage";
+import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
 
@@ -105,6 +107,16 @@ function App() {
               </ProtectedRoute>
             }
         />
+
+        <Route
+            path="/reset-password/:uid/:token"
+            element={<ResetPassword />}
+         />
+
+         <Route
+    path="/forgot-password"
+    element={<ForgotPassword />}
+/>
 
         
       </Routes>

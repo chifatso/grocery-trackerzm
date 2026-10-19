@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from .views import GroceryListViewSet, GroceryItemViewSet, RegistrationView, MonthlyBudgetView, MonthlyBudgetHistoryView,  current_month_spending, spending_comparison, spending_history,  GoogleLoginView
+from .views import GroceryListViewSet, GroceryItemViewSet, RegistrationView, MonthlyBudgetView, MonthlyBudgetHistoryView,  current_month_spending, spending_comparison, spending_history,  GoogleLoginView, ForgotPasswordView, ResetPasswordView
 from django.urls import path
 
 # Create a router
@@ -59,6 +59,17 @@ urlpatterns = [
         MonthlyBudgetHistoryView.as_view(),
         name="monthly-budget-history",
     ),
+    path(
+    "auth/forgot-password/",
+    ForgotPasswordView.as_view(),
+    name="forgot-password",
+),
+
+path(
+    "auth/reset-password/",
+    ResetPasswordView.as_view(),
+    name="reset-password",
+),
     
 
 ]

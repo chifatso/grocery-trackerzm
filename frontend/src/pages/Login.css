@@ -1,0 +1,251 @@
+
+/* Login page */
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #F8FAFC;
+    box-sizing: border-box;
+}
+
+/* Login card */
+.login-card {
+    width: 100%;
+    max-width: 490px;
+    padding: 40px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 18px;
+    box-sizing: border-box;
+}
+
+/* App icon */
+.login-heading-icon {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    background: #FFF4EC;
+    color: #C65D21;
+    font-size: 28px;
+}
+
+/* Heading */
+.login-card h2 {
+    margin: 0 0 10px;
+    text-align: center;
+    color: #1F2937;
+    font-size: 25px;
+}
+
+.login-description {
+    margin: 0 0 32px;
+    text-align: center;
+    color: #64748B;
+    font-size: 15px;
+}
+
+/* Form */
+.login-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.login-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.login-form-group label {
+    color: #1F2937;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Input wrapper */
+.login-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Inputs */
+.login-input-wrapper input {
+    display: block;
+    width: 100%;
+    height: 60px;
+    padding: 12px 48px 12px 55px;
+    border: 1px solid #CBD5E1;
+    border-radius: 12px;
+    background: #FFFFFF;
+    color: #1F2937;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.login-input-wrapper input:focus {
+    outline: none;
+    border-color: #C65D21;
+    box-shadow: 0 0 0 3px rgba(198, 93, 33, 0.12);
+}
+
+/* Input icons */
+.login-input-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748B;
+    font-size: 20px;
+    pointer-events: none;
+}
+
+/* Eye icon */
+.login-card .login-password-toggle {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #64748B;
+    font-size: 19px;
+    cursor: pointer;
+}
+
+.login-card .login-password-toggle:hover {
+    color: #C65D21;
+    background: transparent;
+}
+
+/* Forgot Password link */
+.login-forgot-password {
+    width: 100%;
+    text-align: right;
+    margin-top: 2px;
+}
+
+.login-forgot-password a {
+    color: #C65D21;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.login-forgot-password a:hover {
+    color: #A94716;
+    text-decoration: underline;
+}
+
+/* Login button */
+.login-card .login-submit-button {
+    width: 100%;
+    min-height: 56px;
+    padding: 14px;
+    background: #C65D21;
+    border: none;
+    border-radius: 12px;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-card .login-submit-button:hover:not(:disabled) {
+    background: #A94716;
+}
+
+.login-card .login-submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Divider */
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 30px 0 24px;
+    color: #64748B;
+    font-size: 14px;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #E2E8F0;
+}
+
+/* Google Login */
+.login-google-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+/* Register link */
+.login-register-link {
+    margin-top: 30px;
+    text-align: center;
+    color: #64748B;
+    font-size: 14px;
+}
+
+.login-register-link a {
+    color: #C65D21;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.login-register-link a:hover {
+    text-decoration: underline;
+}
+
+/* Success and error messages */
+.login-success,
+.login-error {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.login-success {
+    background: #F0FDF4;
+    color: #166534;
+}
+
+.login-error {
+    background: #FEF2F2;
+    color: #B91C1C;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .login-page {
+        padding: 16px;
+    }
+
+    .login-card {
+        padding: 28px 22px;
+    }
+}

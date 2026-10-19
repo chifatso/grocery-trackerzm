@@ -14,6 +14,12 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
 from .models import GroceryList, GroceryItem, MonthlyBudget
 from .serializers import (
@@ -236,6 +242,141 @@ def current_month_spending(request):
         "total_spent": spending["total"],
         "items_purchased": spending["items_purchased"],
     })
+
+
+class ForgotPasswordView(APIView):
+    """
+    Send a password reset link to a registered user.
+    """
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        email = request.data.get("email", "")
+
+        if not isinstance(email, str) or not email.strip():
+            return Response(
+                {"detail": "A valid email address is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        User = get_user_model()
+
+        # Use a generic response to avoid revealing
+        # whether an email address is registered.
+        message = {
+            "detail": (
+                "If an eligible account exists with this email, "
+                "a password reset link has been sent."
+            )
+        }
+
+        users = User.objects.filter(
+            email__iexact=email.strip(),
+            is_active=True,
+        )
+
+        for user in users:
+            # Google-only accounts do not have local passwords.
+            if not user.has_usable_password():
+                continue
+
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+            token = default_token_generator.make_token(user)
+
+            # React frontend password reset page.
+            frontend_url = settings.FRONTEND_URL.rstrip("/")
+
+            reset_link = (
+                f"{frontend_url}/reset-password/{uid}/{token}"
+            )
+
+            send_mail(
+                subject="Reset your GroceryTrackerZM password",
+                message=(
+                    "Hello,\n\n"
+                    "We received a request to reset your GroceryTrackerZM "
+                    "password.\n\n"
+                    f"Click the link below:\n{reset_link}\n\n"
+                    "If you did not request this, ignore this email."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+        return Response(message, status=status.HTTP_200_OK)
+
+class ResetPasswordView(APIView):
+    """
+    Validate a password reset token and update
+    the user's password.
+    """
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        uid = request.data.get("uid")
+        token = request.data.get("token")
+        password = request.data.get("password")
+        password2 = request.data.get("password2")
+
+        if not all(
+            isinstance(value, str) and value
+            for value in [uid, token, password, password2]
+        ):
+            return Response(
+                {"detail": "All fields are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if password != password2:
+            return Response(
+                {"detail": "Passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        User = get_user_model()
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_id)
+        except (ValueError, TypeError, OverflowError, User.DoesNotExist):
+            return Response(
+                {"detail": "Invalid or expired reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Reject expired, invalid, or already-used tokens.
+        if (
+            not user.is_active
+            or not user.has_usable_password()
+            or not default_token_generator.check_token(user, token)
+        ):
+            return Response(
+                {"detail": "Invalid or expired reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Apply Django's configured password validators.
+        try:
+            validate_password(password, user=user)
+        except ValidationError as exc:
+            return Response(
+                {"detail": exc.messages},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(password)
+        user.save(update_fields=["password"])
+
+        return Response(
+            {"detail": "Password reset successfully. Please log in."},
+            status=status.HTTP_200_OK,
+        )
 
 @api_view(["GET"])
 def spending_comparison(request):
