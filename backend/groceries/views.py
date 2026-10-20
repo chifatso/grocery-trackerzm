@@ -248,7 +248,7 @@ def current_month_spending(request):
 
 
 class ForgotPasswordView(APIView):
-    """Send a password reset link to a registered user."""
+    """Email a reset link to an eligible password-based account."""
 
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -276,6 +276,7 @@ class ForgotPasswordView(APIView):
             )
 
             for user in users:
+                # Accounts using only Google sign-in cannot reset a local password.
                 if not user.has_usable_password():
                     continue
 
@@ -284,28 +285,32 @@ class ForgotPasswordView(APIView):
                 frontend_url = settings.FRONTEND_URL.rstrip("/")
                 reset_link = f"{frontend_url}/reset-password/{uid}/{token}"
 
-                # TEMPORARY DIAGNOSTIC: no email is sent.
-                print("PASSWORD RESET: Reached email sending stage", flush=True)
-                return Response(
-                    {
-                        "detail": (
-                            "Diagnostic successful: reached email sending stage. "
-                            "No email was sent."
-                        )
-                    },
-                    status=status.HTTP_200_OK,
+                # This invokes the Resend backend configured in Django MAILERS.
+                send_mail(
+                    subject="Reset your GroceryTrackerZM password",
+                    message=(
+                        "Hello,\n\n"
+                        "We received a request to reset your GroceryTrackerZM "
+                        "password.\n\n"
+                        f"Click the link below:\n{reset_link}\n\n"
+                        "If you did not request this, ignore this email."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
                 )
 
             return Response(generic_message, status=status.HTTP_200_OK)
 
         except Exception as exc:
+            # Avoid logging reset tokens, recipient addresses, or API credentials.
             logger.error(
-                "PASSWORD RESET ERROR TYPE: %s",
+                "PASSWORD RESET FAILED: exception type=%s",
                 type(exc).__name__,
             )
             return Response(
-                {"detail": "Password reset failed. Check Render logs for the error type."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                {"detail": "Unable to send password reset email. Please try again later."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
 
