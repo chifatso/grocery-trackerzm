@@ -1,13 +1,15 @@
-
 import os
-
+import logging
 import resend
+
 from django.core.mail.backends.base import BaseEmailBackend
+
+logger = logging.getLogger(__name__)
 
 
 class ResendEmailBackend(BaseEmailBackend):
     """
-    Send Django emails using Resend's HTTPS API.
+    Send Django emails using the Resend HTTPS API.
     """
 
     def send_messages(self, email_messages):
@@ -20,6 +22,7 @@ class ResendEmailBackend(BaseEmailBackend):
             raise ValueError("RESEND_API_KEY is not configured.")
 
         resend.api_key = api_key
+
         sent_count = 0
 
         for message in email_messages:
@@ -39,27 +42,21 @@ class ResendEmailBackend(BaseEmailBackend):
             if message.bcc:
                 params["bcc"] = message.bcc
 
-            ## Send email through Resend's HTTPS API.
-try:
-    result = resend.Emails.send(params)
-    print(
-        "RESEND SUCCESS:",
-        result,
-        flush=True,
-    )
-    sent_count += 1
+            try:
+                response = resend.Emails.send(params)
 
-except Exception as exc:
-    print(
-        "RESEND ERROR TYPE:",
-        type(exc).__name__,
-        flush=True,
-    )
-    print(
-        "RESEND ERROR STATUS:",
-        getattr(exc, "status_code", "Not available"),
-        flush=True,
-    )
-    raise
+                sent_count += 1
+
+                logger.info(
+                    "Resend accepted email request successfully."
+                )
+
+            except Exception:
+                logger.exception(
+                    "Resend email delivery request failed."
+                )
+
+                if not self.fail_silently:
+                    raise
 
         return sent_count
