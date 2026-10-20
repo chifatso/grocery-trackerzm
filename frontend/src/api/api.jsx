@@ -2,7 +2,7 @@
 // Base URL of our Django backend.
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  "http://127.0.0.1:8000/api";
+  "https://grocery-trackerzm.onrender.com/api";
 
 // Get the JWT access token from browser storage.
 function getAccessToken() {

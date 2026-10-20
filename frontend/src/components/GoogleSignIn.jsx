@@ -3,7 +3,9 @@ import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://grocery-trackerzm.onrender.com/api";
 
 function GoogleSignIn() {
     const navigate = useNavigate();
