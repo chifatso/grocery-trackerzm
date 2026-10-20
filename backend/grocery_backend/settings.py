@@ -158,21 +158,18 @@ STORAGES = {
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
+
 MAILERS = {
     "default": {
-        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
-        "OPTIONS": {
-            "host": os.getenv("EMAIL_HOST", "smtp.gmail.com"),
-            "port": int(os.getenv("EMAIL_PORT", "587")),
-            "username": os.getenv("EMAIL_HOST_USER", ""),
-            "password": os.getenv("EMAIL_HOST_PASSWORD", ""),
-            "use_tls": os.getenv(
-                "EMAIL_USE_TLS", "True"
-            ).lower() == "true",
-            "timeout": 20,
-        },
+        "BACKEND": "groceries.email_backend.ResendEmailBackend",
     },
 }
+
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    "GroceryTrackerZM <onboarding@resend.dev>"
+)
+
 
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL",
