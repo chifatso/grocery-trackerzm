@@ -39,8 +39,27 @@ class ResendEmailBackend(BaseEmailBackend):
             if message.bcc:
                 params["bcc"] = message.bcc
 
-            # Send email through Resend's HTTPS API.
-            resend.Emails.send(params)
-            sent_count += 1
+            ## Send email through Resend's HTTPS API.
+try:
+    result = resend.Emails.send(params)
+    print(
+        "RESEND SUCCESS:",
+        result,
+        flush=True,
+    )
+    sent_count += 1
+
+except Exception as exc:
+    print(
+        "RESEND ERROR TYPE:",
+        type(exc).__name__,
+        flush=True,
+    )
+    print(
+        "RESEND ERROR STATUS:",
+        getattr(exc, "status_code", "Not available"),
+        flush=True,
+    )
+    raise
 
         return sent_count
