@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from django.utils import timezone
 
@@ -31,6 +32,8 @@ from .serializers import (
 from .services import get_monthly_spending, get_previous_month, compare_months
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -245,69 +248,66 @@ def current_month_spending(request):
 
 
 class ForgotPasswordView(APIView):
-    """
-    Send a password reset link to a registered user.
-    """
+    """Send a password reset link to a registered user."""
 
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def post(self, request):
         email = request.data.get("email", "")
-
         if not isinstance(email, str) or not email.strip():
             return Response(
                 {"detail": "A valid email address is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        User = get_user_model()
-
-        # Use a generic response to avoid revealing
-        # whether an email address is registered.
-        message = {
+        generic_message = {
             "detail": (
                 "If an eligible account exists with this email, "
                 "a password reset link has been sent."
             )
         }
 
-        users = User.objects.filter(
-            email__iexact=email.strip(),
-            is_active=True,
-        )
-
-        for user in users:
-            # Google-only accounts do not have local passwords.
-            if not user.has_usable_password():
-                continue
-
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-            token = default_token_generator.make_token(user)
-
-            # React frontend password reset page.
-            frontend_url = settings.FRONTEND_URL.rstrip("/")
-
-            reset_link = (
-                f"{frontend_url}/reset-password/{uid}/{token}"
+        try:
+            User = get_user_model()
+            users = User.objects.filter(
+                email__iexact=email.strip(),
+                is_active=True,
             )
 
-            send_mail(
-                subject="Reset your GroceryTrackerZM password",
-                message=(
-                    "Hello,\n\n"
-                    "We received a request to reset your GroceryTrackerZM "
-                    "password.\n\n"
-                    f"Click the link below:\n{reset_link}\n\n"
-                    "If you did not request this, ignore this email."
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
+            for user in users:
+                if not user.has_usable_password():
+                    continue
+
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                token = default_token_generator.make_token(user)
+                frontend_url = settings.FRONTEND_URL.rstrip("/")
+                reset_link = f"{frontend_url}/reset-password/{uid}/{token}"
+
+                # TEMPORARY DIAGNOSTIC: no email is sent.
+                print("PASSWORD RESET: Reached email sending stage", flush=True)
+                return Response(
+                    {
+                        "detail": (
+                            "Diagnostic successful: reached email sending stage. "
+                            "No email was sent."
+                        )
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+            return Response(generic_message, status=status.HTTP_200_OK)
+
+        except Exception as exc:
+            logger.error(
+                "PASSWORD RESET ERROR TYPE: %s",
+                type(exc).__name__,
+            )
+            return Response(
+                {"detail": "Password reset failed. Check Render logs for the error type."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        return Response(message, status=status.HTTP_200_OK)
 
 class ResetPasswordView(APIView):
     """
