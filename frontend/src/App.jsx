@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import { useEffect } from "react";
-import { apiRequest } from "./api/api";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -16,29 +15,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
 
-  useEffect(() => {
-
-    // Test communication with our Django API.
-    async function testAPI() {
-
-      try {
-        const data = await apiRequest(
-          "/grocery-lists/"
-        );
-
-        console.log("Grocery lists:", data);
-      } catch (error) {
-
-        console.error(
-          "API error:",
-          error
-        );
-      }
-    }
-
-    testAPI();
-
-  }, []);
+  
 
 
   return (
