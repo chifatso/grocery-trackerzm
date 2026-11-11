@@ -114,7 +114,7 @@ function GroceryItem({
 
                     <button
                         className="grocery-delete-btn"
-                        onClick={() => onDelete(item.id)}
+                        onClick={() => onDelete(item)}
                         title="Delete item"
                         aria-label={`Delete ${item.name}`}
                     >
@@ -179,7 +179,7 @@ function GroceryItem({
 
                 <button
                     className="grocery-delete-btn"
-                    onClick={() => onDelete(item.id)}
+                    onClick={() => onDelete(item)}
                     title="Delete item"
                     aria-label={`Delete ${item.name}`}
                 >

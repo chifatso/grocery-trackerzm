@@ -1993,11 +1993,92 @@ textarea:focus-visible {
     text-align: center;
 }
 
+/* ==========================================
+   Grocery List + Item Consistency
+   Reuses existing Grocery Item Styling above
+========================================== */
 
+.grocery-list-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
 
+.grocery-list-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
 
+.grocery-list-title-row h3 {
+    margin: 0;
+    color: var(--primary-orange);
+    overflow-wrap: anywhere;
+}
 
+.grocery-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
+/* List and item actions share the same icon-button dimensions. */
+.grocery-list-actions .grocery-edit-btn,
+.grocery-list-actions .grocery-delete-btn,
+.grocery-item-actions .grocery-edit-btn,
+.grocery-item-actions .grocery-delete-btn {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+}
 
+.grocery-list-actions .bi,
+.grocery-item-actions .bi {
+    font-size: 16px;
+}
 
+.grocery-list-rename {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+}
 
+.grocery-list-rename input {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+/* Reuse existing orange Save and neutral Cancel styles. */
+.grocery-list-rename .grocery-save-btn,
+.grocery-list-rename .grocery-cancel-btn {
+    min-height: 40px;
+}
+
+.grocery-list-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+}
+
+@media (max-width: 600px) {
+    .grocery-list-card {
+        padding: 14px;
+    }
+
+    .grocery-list-title-row {
+        align-items: flex-start;
+    }
+
+    .grocery-list-rename input {
+        flex-basis: 100%;
+    }
+}

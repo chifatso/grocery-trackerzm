@@ -51,6 +51,10 @@ function GroceryManager({ onSpendingChange }) {
     const [deletingItem, setDeletingItem] = useState(null);
     const [deletingList, setDeletingList] = useState(null);
 
+    // Renaming the list
+    const [renamingList, setRenamingList] = useState();
+
+
     // ----------------------------------------
     // LOAD GROCERY LISTS
     // ----------------------------------------
@@ -401,6 +405,40 @@ function GroceryManager({ onSpendingChange }) {
         }
     }
 
+    // Renaming the list
+    async function handleRenameList(listId, newName) {
+        const name = newName.trim();
+
+        if(!name){
+            setError("Grocery list cnnot be empty!");
+            return false;
+        }
+
+        try {
+            setRenamingList(listId);
+            setError("");
+
+            await apiRequest(`/grocery-lists/${listId}/`, {
+                method: "PATCH",
+                body: JSON.stringify({ name }),
+            });
+
+            await loadGroceryLists();
+
+            return true;
+        } catch(err){
+            console.error("Error renaming grocery list:", err);
+
+            setError(
+                err.message || "Unable to rename grocery list."
+            );
+
+            return false;
+        } finally {
+            setRenamingList(null);
+        }
+    }
+
     // ----------------------------------------
     // RENDER COMPONENT
     // ----------------------------------------
@@ -483,6 +521,8 @@ function GroceryManager({ onSpendingChange }) {
                                     onDeleteList={handleDeleteList}
                                     deletingItem={deletingItem}
                                     deletingList={deletingList}
+                                    onRenameList={handleRenameList}
+                                    renamingList={renamingList}
                                 />
                             ))
                         )}
