@@ -1,35 +1,145 @@
 
-// Base URL of our Django backend.
 const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://grocery-trackerzm.onrender.com/api";
+    import.meta.env.VITE_API_URL ||
+    "https://grocery-trackerzm.onrender.com/api";
 
-// Get the JWT access token from browser storage.
+// Get the stored JWT access token.
 function getAccessToken() {
     return localStorage.getItem("access");
 }
 
-// Make an authenticated request to the Django API.
+// Get the stored JWT refresh token.
+function getRefreshToken() {
+    return localStorage.getItem("refresh");
+}
+
+// Clear authentication and redirect to login.
+function logoutAndRedirect() {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+
+    // Avoid unnecessary redirects.
+    if (window.location.pathname !== "/login") {
+        window.location.replace("/login");
+    }
+}
+
+// Attempt to obtain a new access token.
+async function refreshAccessToken() {
+    const refreshToken = getRefreshToken();
+
+    if (!refreshToken) {
+        return null;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_URL}/token/refresh/`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    refresh: refreshToken,
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json();
+
+        if (!data.access) {
+            return null;
+        }
+
+        // Save the renewed access token.
+        localStorage.setItem("access", data.access);
+
+        // Support refresh-token rotation if enabled.
+        if (data.refresh) {
+            localStorage.setItem("refresh", data.refresh);
+        }
+
+        return data.access;
+
+    } catch (error) {
+        console.error("Unable to refresh access token:", error);
+        return null;
+    }
+}
+
+// Share an in-progress refresh between simultaneous requests.
+let refreshPromise = null;
+
+function getRefreshedToken() {
+    if (!refreshPromise) {
+        refreshPromise = refreshAccessToken().finally(() => {
+            refreshPromise = null;
+        });
+    }
+
+    return refreshPromise;
+}
+
+// Make an authenticated request to Django.
 export async function apiRequest(endpoint, options = {}) {
+    const isAuthEndpoint =
+        endpoint.startsWith("/token/") ||
+        endpoint.startsWith("/register/");
+
+    const makeRequest = (token) => {
+        const headers = new Headers(options.headers || {});
+
+        // Preserve existing content-type behavior.
+        if (!headers.has("Content-Type") &&
+            options.body != null &&
+            !(options.body instanceof FormData)) {
+            headers.set("Content-Type", "application/json");
+        }
+
+        if (token && !isAuthEndpoint) {
+            headers.set("Authorization", `Bearer ${token}`);
+        }
+
+        return fetch(`${API_URL}${endpoint}`, {
+            ...options,
+            headers,
+        });
+    };
+
     const token = getAccessToken();
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
+    let response = await makeRequest(token);
 
-        headers: {
-            "Content-Type": "application/json",
+    // If an authenticated request fails with 401,
+    // attempt to renew the session.
+    if (response.status === 401 && !isAuthEndpoint) {
+        // Another request may have already refreshed the token.
+        const latestToken = getAccessToken();
 
-            // Send the JWT access token to Django.
-            ...(token && {
-                Authorization: `Bearer ${token}`,
-            }),
+        const newToken =
+            latestToken && latestToken !== token
+                ? latestToken
+                : await getRefreshedToken();
 
-            // Preserve any additional headers.
-            ...options.headers,
-        },
-    });
+        if (newToken) {
+            response = await makeRequest(newToken);
+        }
 
-    // DELETE requests can return 204 with no response body.
+        // Refresh failed or the retry was unauthorized.
+        if (!newToken || response.status === 401) {
+            logoutAndRedirect();
+
+            // Do not expose Django's JWT error message.
+            throw new Error("Session expired. Redirecting to login.");
+        }
+    }
+
+    // DELETE requests may return no content.
     if (response.status === 204) {
         return null;
     }
@@ -37,19 +147,16 @@ export async function apiRequest(endpoint, options = {}) {
     // Read the response as text first.
     const responseText = await response.text();
 
-    // Convert JSON responses into JavaScript objects.
     let data = null;
 
     if (responseText.trim()) {
         try {
             data = JSON.parse(responseText);
         } catch {
-            // The server returned HTML or another non-JSON response.
             if (!response.ok) {
                 throw new Error(
                     `API request failed (${response.status}) for ${endpoint}. ` +
-                    `The server returned a non-JSON response. ` +
-                    "Check the Django terminal for the actual error."
+                    "The server returned a non-JSON response."
                 );
             }
 
@@ -59,7 +166,7 @@ export async function apiRequest(endpoint, options = {}) {
         }
     }
 
-    // Handle unsuccessful HTTP responses.
+    // Handle unsuccessful responses.
     if (!response.ok) {
         const errorMessage =
             data?.detail ||
@@ -75,6 +182,5 @@ export async function apiRequest(endpoint, options = {}) {
         );
     }
 
-    // Return the parsed JSON response.
     return data;
 }

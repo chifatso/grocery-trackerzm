@@ -1,19 +1,21 @@
-import { Navigate } from "react-router-dom";
 
+import { Navigate } from "react-router-dom";
 
 function ProtectedRoute({ children }) {
 
-    // Check whether the user has a JWT access token.
-    const token = localStorage.getItem("access");
+    // Get both JWT tokens from local storage.
+    const accessToken = localStorage.getItem("access");
+    const refreshToken = localStorage.getItem("refresh");
 
-
-    // If there is no token, send the user to login.
-    if(!token){
+    // If neither token exists, redirect to login.
+    if (!accessToken && !refreshToken) {
         return <Navigate to="/login" replace />;
     }
 
-    // If the user is logged in,
-    // display the requested page.
+    // If an access token or refresh token exists,
+    // allow the protected page to render.
+    // The API layer will attempt token refresh
+    // when Django responds with HTTP 401.
     return children;
 }
 
